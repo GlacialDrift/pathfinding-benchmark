@@ -26,6 +26,57 @@ export interface Tile {
 }
 
 /**
+ * Map interface that contains the important fields of a map, the map data itself, and helper functions
+ */
+export interface GameMap {
+    readonly name: MapName;
+    readonly width: number;
+    readonly height: number;
+    readonly landTiles: number;
+    readonly data: readonly Tile[];
+    get(x: number, y: number): Tile;
+    neighbors(x: number, y: number): Tile[];
+}
+
+/**
+ * Manifest interface that contains map name and general map information
+ */
+export interface Manifest {
+    name: string;
+    map: { width: number; height: number; num_land_tiles: number };
+}
+
+/**
+ * A single transport test case containing:
+ *  - the test case id
+ *  - the target Tile
+ *  - the sourceCenter Tile (in case source Territory needs to be recreated)
+ *  - the source radius that was used to generate source territory
+ *  - an array of source shore tiles (to be available as potential sources for pathfinding)
+ */
+export interface TransportTestCase {
+    id: string;
+    target: Tile;
+    sourceCenter: Tile;
+    sourceRadius: number;
+    sourceShore: Tile[];
+}
+
+/**
+ * All transport test cases for a given map including:
+ *  - the map's name
+ *  - the Version of this tool used to generate test cases
+ *  - the time the cases were generated
+ *  - the list of cases for that map
+ */
+export interface MapCases {
+    mapName: MapName;
+    version: string;
+    generatedAt: string;
+    cases: TransportTestCase[];
+}
+
+/**
  * Creates a Tile object based on the provided x,y coordinates and the raw byte for that tile
  * @param x - x-coordinate
  * @param y - y-coordinate
@@ -56,4 +107,23 @@ export function discoverMaps(): MapName[] {
         const manifestpath = path.join(dir, name, "manifest.json");
         return fs.existsSync(manifestpath);
     });
+}
+
+/**
+ * Helper function to determine the squared distance between two points
+ * @param a - the first point (includes x-y coordinates)
+ * @param b - the second point (includes x-y coordinates)
+ */
+export function distSq(a: Tile, b: Tile): number {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return dx * dx + dy * dy;
+}
+
+/**
+ * Select a random element of a provided array
+ * @param arr - list of possible elements to select
+ */
+export function randomElement<T>(arr: T[]): T {
+    return arr[Math.floor(Math.random() * arr.length)];
 }

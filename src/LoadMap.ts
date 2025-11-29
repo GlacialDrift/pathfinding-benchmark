@@ -1,28 +1,13 @@
-import { type MapName, type Tile, tileFromByte } from "./Utils.ts";
+import {
+    type GameMap,
+    type Manifest,
+    type MapName,
+    type Tile,
+    tileFromByte,
+} from "./Utils.ts";
 import * as fs from "node:fs";
 import path from "path";
 import { fileURLToPath } from "url";
-
-/**
- * Map interface that contains the important fields of a map, the map data itself, and helper functions
- */
-export interface GameMap {
-    readonly name: MapName;
-    readonly width: number;
-    readonly height: number;
-    readonly landTiles: number;
-    readonly data: readonly Tile[];
-    get(x: number, y: number): Tile;
-    neighbors(x: number, y: number): Tile[];
-}
-
-/**
- * Manifest interface that contains map name and general map information
- */
-export interface Manifest {
-    name: string;
-    map: { width: number; height: number; num_land_tiles: number };
-}
 
 /**
  * Returns the directory that contains the map of a given name
@@ -57,6 +42,7 @@ export function readBinFile(name: MapName): Uint8Array {
  * Creates a Map object from the manifest information and binary data of a provided map name. Returns all relevant
  * information about the map as well as two helper functions to extract info from the map.
  * @param name - Map Name
+ * @returns A GameMap object if the map can be parsed, otherwise returns null.
  */
 export function loadMapFromName(name: MapName): GameMap | null {
     const manifest = readManifest(name);

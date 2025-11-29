@@ -1,37 +1,29 @@
-import { discoverMaps, type MapName, type Tile } from "./Utils.ts";
+import {
+    discoverMaps,
+    distSq,
+    type MapCases,
+    type MapName,
+    randomElement,
+    type Tile,
+    type TransportTestCase,
+} from "./Utils.ts";
 import { loadMapFromName } from "./LoadMap.ts";
 import { fileURLToPath } from "url";
 import path from "path";
 import * as fs from "node:fs";
 
+/** number of cases to be generated for each map */
 const CASES_PER_MAP: number = 100;
-const SOURCE_RADIUS: number = 50;
+/** The distance from the source center to use as the source territory */
+const SOURCE_RADIUS: { min: number; max: number } = { min: 10, max: 500 };
 
-export interface TransportTestCase {
-    id: string;
-    target: Tile;
-    sourceCenter: Tile;
-    sourceRadius: number;
-    sourceShore: Tile[];
-}
-
-export interface MapCases {
-    mapName: MapName;
-    version: string;
-    generatedAt: string;
-    cases: TransportTestCase[];
-}
-
-export function distSq(a: Tile, b: Tile): number {
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    return dx * dx + dy * dy;
-}
-
-export function randomElement<T>(arr: T[]): T {
-    return arr[Math.floor(Math.random() * arr.length)];
-}
-
+/**
+ * Generates test cases for a provided map and returns them as a list of individual Test Cases.
+ *
+ * The maximum number of test cases is determined by CASES_PER_MAP. Target tiles and source shore tiles must be at least
+ * SOURCE_RADIUS distance apart. Only shore tiles (land tile && shoreline tile) are considered here.
+ * @param name - Map Name
+ */
 export function generateCasesForMap(name: MapName): TransportTestCase[] | null {
     const gameMap = loadMapFromName(name);
     if (gameMap === null) return null;
@@ -51,11 +43,14 @@ export function generateCasesForMap(name: MapName): TransportTestCase[] | null {
     const MAX_ATTEMPTS: number = CASES_PER_MAP * 2;
     while (cases.length < CASES_PER_MAP && attempts < MAX_ATTEMPTS) {
         attempts++;
+        const radius = Math.floor(
+            Math.random() * (SOURCE_RADIUS.max - SOURCE_RADIUS.min) +
+                SOURCE_RADIUS.min,
+        );
 
         const targetTile: Tile = randomElement(shoreTiles);
         const sourceCenter: Tile = randomElement(shoreTiles);
-        if (distSq(targetTile, sourceCenter) <= SOURCE_RADIUS * SOURCE_RADIUS)
-            continue;
+        if (distSq(targetTile, sourceCenter) <= radius * radius) continue;
 
         const sourceTerritory: Tile[] = shoreTiles.filter((t: Tile) => {
             // if (Math.abs(t.y - sourceCenter.y) < 20) {
@@ -63,7 +58,7 @@ export function generateCasesForMap(name: MapName): TransportTestCase[] | null {
             // }
             // const dist = distSq(t, sourceCenter);
             // return dist <= SOURCE_RADIUS * SOURCE_RADIUS;
-            return distSq(t, sourceCenter) <= SOURCE_RADIUS * SOURCE_RADIUS;
+            return distSq(t, sourceCenter) <= radius * radius;
         });
         if (sourceTerritory.length === 0) continue;
 
@@ -72,7 +67,7 @@ export function generateCasesForMap(name: MapName): TransportTestCase[] | null {
             id,
             target: targetTile,
             sourceCenter,
-            sourceRadius: SOURCE_RADIUS,
+            sourceRadius: radius,
             sourceShore: sourceTerritory,
         });
     }
@@ -80,10 +75,15 @@ export function generateCasesForMap(name: MapName): TransportTestCase[] | null {
     return cases;
 }
 
+/**
+ * Writes the full MapCases object to file
+ * @param name - Map Name
+ * @param cases - List of Transport Test Cases created for the associated map
+ */
 export function writeCasesToFile(name: MapName, cases: TransportTestCase[]) {
-    const output = {
+    const output: MapCases = {
         mapName: name,
-        version: "0.0.1",
+        version: "0.0.2",
         generatedAt: new Date().toISOString(),
         cases,
     };
@@ -100,6 +100,9 @@ export function writeCasesToFile(name: MapName, cases: TransportTestCase[]) {
     );
 }
 
+/**
+ * Discovers all maps available. Then for each map, generate test cases and write them to file.
+ */
 export function generateCases() {
     const mapNames = discoverMaps();
     mapNames.forEach((name: MapName) => {
