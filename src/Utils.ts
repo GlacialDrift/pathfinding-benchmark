@@ -63,6 +63,25 @@ export interface TransportTestCase {
 }
 
 /**
+ * A single transport test case result containing:
+ *  - the test case id
+ *  - the target Tile
+ *  - the sourceCenter Tile (in case source Territory needs to be recreated)
+ *  - the source radius that was used to generate source territory
+ *  - the source tile identified by the algorithm
+ *  - the number of tiles visited during the algorithm
+ */
+export interface TransportTestReseult {
+    id: string;
+    method: string;
+    target: Tile;
+    sourceCenter: Tile;
+    sourceRadius: number;
+    source: Tile;
+    visited: number;
+}
+
+/**
  * All transport test cases for a given map including:
  *  - the map's name
  *  - the Version of this tool used to generate test cases
@@ -107,6 +126,23 @@ export function discoverMaps(): MapName[] {
         const manifestpath = path.join(dir, name, "manifest.json");
         return fs.existsSync(manifestpath);
     });
+}
+
+/**
+ * Returns a list of all map names within the 'resources' directory of the project
+ */
+export function discoverCases(): string[] {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const dir = path.join(__dirname, "..", "cases");
+
+    if (!fs.existsSync(dir)) return [];
+
+    const files: string[] = [];
+    fs.readdirSync(dir).forEach((name: string) => {
+        files.push(path.join(dir, name));
+    });
+    return files;
 }
 
 /**

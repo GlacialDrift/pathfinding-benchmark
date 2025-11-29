@@ -1,3 +1,3 @@
-import { generateCases } from "./GenerateCases.ts";
+import { runBFSBenchmarks } from "./benchmarkBFS.ts";
 
-generateCases();
+runBFSBenchmarks();
