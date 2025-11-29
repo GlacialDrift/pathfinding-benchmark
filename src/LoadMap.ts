@@ -58,15 +58,17 @@ export function readBinFile(name: MapName): Uint8Array {
  * information about the map as well as two helper functions to extract info from the map.
  * @param name - Map Name
  */
-export function loadMapFromName(name: MapName): GameMap {
+export function loadMapFromName(name: MapName): GameMap | null {
     const manifest = readManifest(name);
     const { width, height } = manifest.map;
     const data = readBinFile(name);
 
-    if (data.length !== width * height)
-        throw new Error(
+    if (data.length !== width * height) {
+        console.warn(
             `Data mismatch. Expected data length of ${width * height} and have data length of ${data.length}`,
         );
+        return null;
+    }
 
     const tiles: Tile[] = new Array(width * height);
     data.forEach((byte: number, index: number) => {

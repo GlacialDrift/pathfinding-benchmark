@@ -1,4 +1,3 @@
-import { loadMapFromName } from "./LoadMap.ts";
+import { generateCases } from "./GenerateCases.ts";
 
-const africa = loadMapFromName("africa");
-console.log(africa.neighbors(22, 22));
+generateCases("africa");
