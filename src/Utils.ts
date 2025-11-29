@@ -12,12 +12,12 @@ export interface RawTile {
 }
 
 export interface Tile {
-    x: number;
-    y: number;
-    isLand: boolean;
-    isOcean: boolean;
-    isShore: boolean;
-    raw: number;
+    readonly x: number;
+    readonly y: number;
+    readonly isLand: boolean;
+    readonly isOcean: boolean;
+    readonly isShore: boolean;
+    readonly raw: number;
 }
 
 /**

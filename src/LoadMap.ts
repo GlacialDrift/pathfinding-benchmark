@@ -1,4 +1,4 @@
-import type { RawTile } from "./Utils.ts";
+import { type Tile, tileFromByte } from "./Utils.ts";
 import * as fs from "node:fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -8,14 +8,14 @@ export type MapName = string;
 /**
  * Map interface that contains the important fields of a map, the map data itself, and helper functions
  */
-export interface Map {
-    name: MapName;
-    width: number;
-    height: number;
-    landTiles: number;
-    data: Uint8Array;
-    get(x: number, y: number): number;
-    neighbors(x: number, y: number): RawTile[];
+export interface GameMap {
+    readonly name: MapName;
+    readonly width: number;
+    readonly height: number;
+    readonly landTiles: number;
+    readonly data: readonly Tile[];
+    get(x: number, y: number): Tile;
+    neighbors(x: number, y: number): Tile[];
 }
 
 /**
@@ -60,7 +60,7 @@ export function readBinFile(name: MapName): Uint8Array {
  * information about the map as well as two helper functions to extract info from the map.
  * @param name - Map Name
  */
-export function loadMapFromName(name: MapName): Map {
+export function loadMapFromName(name: MapName): GameMap {
     const manifest = readManifest(name);
     const { width, height } = manifest.map;
     const data = readBinFile(name);
@@ -70,13 +70,20 @@ export function loadMapFromName(name: MapName): Map {
             `Data mismatch. Expected data length of ${width * height} and have data length of ${data.length}`,
         );
 
+    const tiles: Tile[] = new Array(width * height);
+    data.forEach((byte: number, index: number) => {
+        const y = Math.floor(index / width);
+        const x = index % width;
+        tiles[index] = tileFromByte(x, y, byte);
+    });
+
     return {
         name,
         width,
         height,
         landTiles: manifest.map.num_land_tiles,
-        data,
-        get(x: number, y: number): number {
+        data: tiles,
+        get(x: number, y: number): Tile {
             if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
                 throw new Error(
                     `X: ${x} or Y: ${y} is out of bounds for map ${this.name}`,
@@ -84,32 +91,14 @@ export function loadMapFromName(name: MapName): Map {
             }
             return this.data[y * this.width + x];
         },
-        neighbors(x: number, y: number): RawTile[] {
-            const neighbors: RawTile[] = [];
-            if (x > 0)
-                neighbors.push({
-                    x: x - 1,
-                    y,
-                    raw: this.data[y * this.width + x - 1],
-                });
-            if (y > 0)
-                neighbors.push({
-                    x,
-                    y: y - 1,
-                    raw: this.data[(y - 1) * this.width + x],
-                });
+        neighbors(x: number, y: number): Tile[] {
+            const neighbors: Tile[] = [];
+            if (x > 0) neighbors.push(this.data[y * this.width + x - 1]);
+            if (y > 0) neighbors.push(this.data[(y - 1) * this.width + x]);
             if (x + 1 < this.width)
-                neighbors.push({
-                    x: x + 1,
-                    y,
-                    raw: this.data[y * this.width + x + 1],
-                });
+                neighbors.push(this.data[y * this.width + x + 1]);
             if (y + 1 < this.height)
-                neighbors.push({
-                    x,
-                    y: y + 1,
-                    raw: this.data[(y + 1) * this.width + x],
-                });
+                neighbors.push(this.data[(y + 1) * this.width + x]);
             return neighbors;
         },
     };
