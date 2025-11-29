@@ -20,6 +20,12 @@ export interface Tile {
     raw: number;
 }
 
+/**
+ * Creates a Tile object based on the provided x,y coordinates and the raw byte for that tile
+ * @param x - x-coordinate
+ * @param y - y-coordinate
+ * @param b - raw byte
+ */
 export function tileFromByte(x: number, y: number, b: number): Tile {
     return {
         x,
