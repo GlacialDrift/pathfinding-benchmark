@@ -23,9 +23,11 @@
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.5.4",
         "globals": "^16.5.0",
+        "path": "^0.12.7",
         "prettier": "^3.7.2",
         "ts-node": "^10.9.2",
         "typescript": "~5.9.3",
+        "url": "^0.11.4",
         "vite": "npm:rolldown-vite@7.2.5"
     },
     "overrides": {
