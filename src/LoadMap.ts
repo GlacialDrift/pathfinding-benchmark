@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 export type MapName = string;
 
 /**
- * Map interface that contains
+ * Map interface that contains the important fields of a map, the map data itself, and helper functions
  */
 export interface Map {
     name: MapName;
@@ -18,28 +18,48 @@ export interface Map {
     neighbors(x: number, y: number): RawTile[];
 }
 
+/**
+ * Manifest interface that contains map name and general map information
+ */
 export interface Manifest {
     name: string;
     map: { width: number; height: number; num_land_tiles: number };
 }
 
+/**
+ * Returns the directory that contains the map of a given name
+ * @param name - Map Name
+ */
 export function getMapDir(name: MapName) {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     return path.join(__dirname, "..", "resources", name);
 }
 
+/**
+ * Returns a Manifest object that contains basic information of a map
+ * @param name - Map Name
+ */
 export function readManifest(name: MapName): Manifest {
     const manifestPath = path.join(getMapDir(name), "manifest.json");
     const raw = fs.readFileSync(manifestPath, "utf8");
     return JSON.parse(raw) as Manifest;
 }
 
+/**
+ * Returns the binary data array that contains terrain information of a map
+ * @param name - Map Name
+ */
 export function readBinFile(name: MapName): Uint8Array {
     const binFilePath = path.join(getMapDir(name), "map.bin");
     return new Uint8Array(fs.readFileSync(binFilePath));
 }
 
+/**
+ * Creates a Map object from the manifest information and binary data of a provided map name. Returns all relevant
+ * information about the map as well as two helper functions to extract info from the map.
+ * @param name - Map Name
+ */
 export function loadMapFromName(name: MapName): Map {
     const manifest = readManifest(name);
     const { width, height } = manifest.map;
@@ -95,6 +115,9 @@ export function loadMapFromName(name: MapName): Map {
     };
 }
 
+/**
+ * Returns a list of all map names within the 'resources' directory of the project
+ */
 export function discoverMaps(): MapName[] {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
