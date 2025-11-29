@@ -1,3 +1,3 @@
-import { runBFSBenchmarks } from "./benchmarkBFS.ts";
+import { runBenchmarks } from "./benchmark.ts";
 
-runBFSBenchmarks();
+runBenchmarks();
