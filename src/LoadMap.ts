@@ -5,11 +5,15 @@ import { fileURLToPath } from "url";
 
 export type MapName = string;
 
+/**
+ * Map interface that contains
+ */
 export interface Map {
     name: MapName;
     width: number;
     height: number;
     landTiles: number;
+    data: Uint8Array;
     get(x: number, y: number): number;
     neighbors(x: number, y: number): RawTile[];
 }
@@ -51,24 +55,41 @@ export function loadMapFromName(name: MapName): Map {
         width,
         height,
         landTiles: manifest.map.num_land_tiles,
+        data,
         get(x: number, y: number): number {
-            if (x < 0 || x >= width || y < 0 || y >= height) {
+            if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
                 throw new Error(
-                    `X: ${x} or Y: ${y} is out of bounds for map ${name}`,
+                    `X: ${x} or Y: ${y} is out of bounds for map ${this.name}`,
                 );
             }
-            return data[y * width + x];
+            return this.data[y * this.width + x];
         },
         neighbors(x: number, y: number): RawTile[] {
             const neighbors: RawTile[] = [];
             if (x > 0)
-                neighbors.push({ x: x - 1, y, raw: data[y * width + x - 1] });
+                neighbors.push({
+                    x: x - 1,
+                    y,
+                    raw: this.data[y * this.width + x - 1],
+                });
             if (y > 0)
-                neighbors.push({ x, y: y - 1, raw: data[(y - 1) * width + x] });
-            if (x + 1 < width)
-                neighbors.push({ x: x + 1, y, raw: data[y * width + x + 1] });
-            if (y + y < height)
-                neighbors.push({ x, y: y + 1, raw: data[(y + 1) * width + x] });
+                neighbors.push({
+                    x,
+                    y: y - 1,
+                    raw: this.data[(y - 1) * this.width + x],
+                });
+            if (x + 1 < this.width)
+                neighbors.push({
+                    x: x + 1,
+                    y,
+                    raw: this.data[y * this.width + x + 1],
+                });
+            if (y + 1 < this.height)
+                neighbors.push({
+                    x,
+                    y: y + 1,
+                    raw: this.data[(y + 1) * this.width + x],
+                });
             return neighbors;
         },
     };
