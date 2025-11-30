@@ -53,14 +53,14 @@ export interface Manifest {
  *  - the target Tile
  *  - the sourceCenter Tile (in case source Territory needs to be recreated)
  *  - the source radius that was used to generate source territory
- *  - an array of source shore tiles (to be available as potential sources for pathfinding)
+ *  - an array of source shore tiles (described as their tile number = y*width + x)
  */
 export interface TransportTestCase {
     id: string;
     target: Tile;
     sourceCenter: Tile;
     sourceRadius: number;
-    sourceShore: Tile[];
+    sourceShore: number[];
 }
 
 /**
@@ -74,6 +74,7 @@ export interface TransportTestCase {
  */
 export interface TransportTestReseult {
     id: string;
+    version: string;
     method: string;
     target: Tile;
     sourceCenter: Tile;

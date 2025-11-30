@@ -15,18 +15,26 @@ export function runAStarBenchmark(
     map: GameMap,
     miniMap: GameMap,
     tests: TransportTestCase[],
+    version: string,
 ) {
     for (let i = 0; i < tests.length; i++) {
         if (i == 0) {
+            const playerShores: Tile[] = new Array(tests[i].sourceShore.length);
+            tests[i].sourceShore.forEach((s, index) => {
+                const y = Math.floor(s / map.width);
+                const x = s % map.width;
+                playerShores[index] = map.get(x, y);
+            });
             const source = bestShoreDeploymentSource(
                 map,
                 miniMap,
-                tests[i].sourceShore,
+                playerShores,
                 tests[i].target,
             );
             if (source) {
                 const result: TransportTestReseult = {
                     id: tests[i].id,
+                    version,
                     method: "BFS",
                     target: tests[i].target,
                     sourceCenter: tests[i].sourceCenter,
@@ -113,7 +121,8 @@ export function candidateShoreTiles(
         maxY: null,
     };
 
-    for (const tile of borderShoreTiles) {
+    for (let i = 0; i < borderShoreTiles.length; i++) {
+        const tile = borderShoreTiles[i];
         const distance = manhattanDist(tile, target);
 
         // Manhattan-closest tile

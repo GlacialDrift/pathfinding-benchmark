@@ -62,13 +62,17 @@ export function generateCasesForMap(name: MapName): TransportTestCase[] | null {
         });
         if (sourceTerritory.length === 0) continue;
 
+        const territory: number[] = sourceTerritory.map(
+            (s) => s.y * gameMap.width + s.x,
+        );
+
         const id = `${name}-${String(cases.length + 1).padStart(3, "0")}`;
         cases.push({
             id,
             target: targetTile,
             sourceCenter,
             sourceRadius: radius,
-            sourceShore: sourceTerritory,
+            sourceShore: territory,
         });
     }
 
@@ -83,7 +87,7 @@ export function generateCasesForMap(name: MapName): TransportTestCase[] | null {
 export function writeCasesToFile(name: MapName, cases: TransportTestCase[]) {
     const output: MapCases = {
         mapName: name,
-        version: "0.0.2",
+        version: "0.0.3",
         generatedAt: new Date().toISOString(),
         cases,
     };

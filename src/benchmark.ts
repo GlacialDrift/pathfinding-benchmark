@@ -17,8 +17,9 @@ export function runBenchmarks() {
                 continue;
             }
             const tests = mapCase.cases;
-            runBFSBenchmark(map, tests);
-            runAStarBenchmark(map, miniMap, tests);
+            const v = mapCase.version;
+            runBFSBenchmark(map, tests, v);
+            runAStarBenchmark(map, miniMap, tests, v);
         }
     }
 }

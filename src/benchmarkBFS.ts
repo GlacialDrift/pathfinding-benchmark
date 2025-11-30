@@ -8,13 +8,18 @@ import * as fs from "node:fs";
 import { fileURLToPath } from "url";
 import path from "path";
 
-export function runBFSBenchmark(map: GameMap, tests: TransportTestCase[]) {
+export function runBFSBenchmark(
+    map: GameMap,
+    tests: TransportTestCase[],
+    version: string,
+) {
     for (let j = 0; j < tests.length; j++) {
         if (j == 0) {
             const visited = benchmarkTest(map, tests[j]);
             if (!(visited instanceof Set)) {
                 const result: TransportTestReseult = {
                     id: tests[j].id,
+                    version,
                     method: "BFS",
                     target: tests[j].target,
                     sourceCenter: tests[j].sourceCenter,
@@ -50,7 +55,11 @@ export function benchmarkTest(
     t: TransportTestCase,
 ): { source: Tile; visited: number } | Set<Tile> {
     const targetTile = map.get(t.target.x, t.target.y);
-    const sourceTiles = t.sourceShore.map((s) => map.get(s.x, s.y));
+    const sourceTiles = t.sourceShore.map((s) => {
+        const y = Math.floor(s / map.width);
+        const x = s % map.width;
+        return map.get(x, y);
+    });
     return BFS(targetTile, sourceTiles, map);
 }
 
