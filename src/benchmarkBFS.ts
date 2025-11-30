@@ -10,31 +10,37 @@ import path from "path";
 
 export function runBFSBenchmark(map: GameMap, tests: TransportTestCase[]) {
     for (let j = 0; j < tests.length; j++) {
-        const visited = benchmarkTest(map, tests[j]);
-        if (!(visited instanceof Set)) {
-            const result: TransportTestReseult = {
-                id: tests[j].id,
-                method: "BFS",
-                target: tests[j].target,
-                sourceCenter: tests[j].sourceCenter,
-                sourceRadius: tests[j].sourceRadius,
-                source: visited.source,
-                visited: visited.visited,
-            };
+        if (j == 0) {
+            const visited = benchmarkTest(map, tests[j]);
+            if (!(visited instanceof Set)) {
+                const result: TransportTestReseult = {
+                    id: tests[j].id,
+                    method: "BFS",
+                    target: tests[j].target,
+                    sourceCenter: tests[j].sourceCenter,
+                    sourceRadius: tests[j].sourceRadius,
+                    source: visited.source,
+                    visited: visited.visited,
+                };
 
-            const __filename = fileURLToPath(import.meta.url);
-            const __dirname = path.dirname(__filename);
-            const dir = path.join(__dirname, "..", "results");
-            fs.mkdirSync(dir, { recursive: true });
+                const __filename = fileURLToPath(import.meta.url);
+                const __dirname = path.dirname(__filename);
+                const dir = path.join(__dirname, "..", "results");
+                fs.mkdirSync(dir, { recursive: true });
 
-            const outPath = path.join(
-                dir,
-                `${tests[j].id}-BFS-TestResult.json`,
-            );
-            fs.writeFileSync(outPath, JSON.stringify(result, null, 4), "utf8");
-            console.log(
-                `Completed test ${j} of ${tests.length} for map ${map.name}`,
-            );
+                const outPath = path.join(
+                    dir,
+                    `${tests[j].id}-BFS-TestResult.json`,
+                );
+                fs.writeFileSync(
+                    outPath,
+                    JSON.stringify(result, null, 4),
+                    "utf8",
+                );
+                console.log(
+                    `Completed test ${j + 1} of ${tests.length} for map ${map.name} - BFS`,
+                );
+            }
         }
     }
 }

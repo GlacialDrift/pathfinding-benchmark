@@ -1,7 +1,7 @@
 import { discoverCases, type MapCases } from "./Utils.ts";
 import fs from "node:fs";
 import { loadMapFromName, loadMiniMapFromName } from "./LoadMap.ts";
-// import { runBFSBenchmark } from "./benchmarkBFS.ts";
+import { runBFSBenchmark } from "./benchmarkBFS.ts";
 import { runAStarBenchmark } from "./benchmarkAStar.ts";
 
 export function runBenchmarks() {
@@ -17,7 +17,7 @@ export function runBenchmarks() {
                 continue;
             }
             const tests = mapCase.cases;
-            // runBFSBenchmark(map, tests);
+            runBFSBenchmark(map, tests);
             runAStarBenchmark(map, miniMap, tests);
         }
     }

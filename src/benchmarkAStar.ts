@@ -3,9 +3,13 @@ import {
     manhattanDist,
     type Tile,
     type TransportTestCase,
+    type TransportTestReseult,
 } from "./Utils.ts";
 import { isShoreline, magnitude } from "./TerrainBytes.ts";
 import FastPriorityQueue from "fastpriorityqueue";
+import { fileURLToPath } from "url";
+import path from "path";
+import fs from "node:fs";
 
 export function runAStarBenchmark(
     map: GameMap,
@@ -20,7 +24,35 @@ export function runAStarBenchmark(
                 tests[i].sourceShore,
                 tests[i].target,
             );
-            console.log(source);
+            if (source) {
+                const result: TransportTestReseult = {
+                    id: tests[i].id,
+                    method: "BFS",
+                    target: tests[i].target,
+                    sourceCenter: tests[i].sourceCenter,
+                    sourceRadius: tests[i].sourceRadius,
+                    source: source.source,
+                    visited: source.visited,
+                };
+
+                const __filename = fileURLToPath(import.meta.url);
+                const __dirname = path.dirname(__filename);
+                const dir = path.join(__dirname, "..", "results");
+                fs.mkdirSync(dir, { recursive: true });
+
+                const outPath = path.join(
+                    dir,
+                    `${tests[i].id}-Astar-TestResult.json`,
+                );
+                fs.writeFileSync(
+                    outPath,
+                    JSON.stringify(result, null, 4),
+                    "utf8",
+                );
+                console.log(
+                    `Completed test ${i + 1} of ${tests.length} for map ${map.name} - A*`,
+                );
+            }
         }
     }
 }
@@ -30,7 +62,8 @@ export function bestShoreDeploymentSource(
     miniMap: GameMap,
     playerShores: Tile[],
     target: Tile,
-): Tile | false {
+): { source: Tile; visited: number } | false {
+    let cells: number = 0;
     if (target === null) return false;
     const territory = playerShores.map((s) => map.get(s.x, s.y));
 
@@ -38,7 +71,8 @@ export function bestShoreDeploymentSource(
     if (candidates.length === 0) return false;
 
     const aStar = new MiniAStar(map, miniMap, candidates, target, 1_000_000, 1);
-    const result = aStar.compute();
+    const { result, visited } = aStar.compute();
+    cells += visited;
     if (result !== 2) {
         console.warn(`bestShoreDeploymentSource: path not found: ${result}`);
         return false;
@@ -57,7 +91,7 @@ export function bestShoreDeploymentSource(
     if (neighbors.length === 0) {
         return false;
     }
-    return neighbors[0];
+    return { source: neighbors[0], visited: cells };
 }
 
 export function candidateShoreTiles(
@@ -126,7 +160,7 @@ export function candidateShoreTiles(
 }
 
 export interface AStar<NodeType> {
-    compute(): number;
+    compute(): { result: number; visited: number };
     reconstructPath(): NodeType[];
 }
 
@@ -171,7 +205,7 @@ export class MiniAStar implements AStar<Tile> {
         );
     }
 
-    compute(): number {
+    compute(): { result: number; visited: number } {
         return this.aStar.compute();
     }
 
@@ -309,6 +343,8 @@ export class SerialAStar<NodeType> implements AStar<NodeType> {
     private graph: GraphAdapter<NodeType>;
     private directionChangePenalty: number = 0;
 
+    private cells: number;
+
     constructor(
         src: NodeType | NodeType[],
         dst: NodeType,
@@ -320,6 +356,7 @@ export class SerialAStar<NodeType> implements AStar<NodeType> {
         this.iterations = iterations;
         this.maxTries = maxTries;
         this.graph = graph;
+        this.cells = 0;
 
         this.fwdOpenSet = new FastPriorityQueue((a, b) => a.fScore < b.fScore);
         this.bwdOpenSet = new FastPriorityQueue((a, b) => a.fScore < b.fScore);
@@ -333,6 +370,7 @@ export class SerialAStar<NodeType> implements AStar<NodeType> {
                 tile: startPoint,
                 fScore: this.heuristic(startPoint, dst),
             });
+            this.cells++;
         });
 
         // Initialize backward search from destination
@@ -341,6 +379,7 @@ export class SerialAStar<NodeType> implements AStar<NodeType> {
             tile: dst,
             fScore: this.heuristic(dst, this.findClosestSource(dst)),
         });
+        this.cells++;
     }
 
     private findClosestSource(tile: NodeType): NodeType {
@@ -351,8 +390,8 @@ export class SerialAStar<NodeType> implements AStar<NodeType> {
         );
     }
 
-    compute(): number {
-        if (this.completed) return 2;
+    compute(): { result: number; visited: number } {
+        if (this.completed) return { result: 2, visited: this.cells };
 
         this.maxTries -= 1;
         let iterations = this.iterations;
@@ -361,19 +400,20 @@ export class SerialAStar<NodeType> implements AStar<NodeType> {
             iterations--;
             if (iterations <= 0) {
                 if (this.maxTries <= 0) {
-                    return 3;
+                    return { result: 3, visited: this.cells };
                 }
-                return 1;
+                return { result: 1, visited: this.cells };
             }
 
             // Process forward search
             const fwdCurrent = this.fwdOpenSet.poll()!.tile;
+            this.cells++;
 
             // Check if we've found a meeting point
             if (this.bwdGScore.has(fwdCurrent)) {
                 this.meetingPoint = fwdCurrent;
                 this.completed = true;
-                return 2;
+                return { result: 2, visited: this.cells };
             }
             this.expandNode(fwdCurrent, true);
 
@@ -384,16 +424,19 @@ export class SerialAStar<NodeType> implements AStar<NodeType> {
             if (this.fwdGScore.has(bwdCurrent)) {
                 this.meetingPoint = bwdCurrent;
                 this.completed = true;
-                return 2;
+                return { result: 2, visited: this.cells };
             }
             this.expandNode(bwdCurrent, false);
         }
 
-        return this.completed ? 2 : 3;
+        return this.completed
+            ? { result: 2, visited: this.cells }
+            : { result: 3, visited: this.cells };
     }
 
     private expandNode(current: NodeType, isForward: boolean) {
         for (const neighbor of this.graph.neighbors(current)) {
+            this.cells++;
             if (
                 neighbor !== (isForward ? this.dst : this.closestSource) &&
                 !this.graph.isTraversable(current, neighbor)
@@ -513,3 +556,10 @@ export class GameMapAdapter implements GraphAdapter<Tile> {
         return !toWater || fromShore || toShore;
     }
 }
+
+// export enum PathFindResultType {
+//     NextTile,
+//     Pending,
+//     Completed,
+//     PathNotFound,
+// }
