@@ -1,6 +1,7 @@
 import {
     discoverMaps,
     distSq,
+    manhattanDist,
     type MapCases,
     type MapName,
     randomElement,
@@ -48,35 +49,82 @@ export function generateCasesForMap(name: MapName): TransportTestCase[] | null {
                 SOURCE_RADIUS.min,
         );
 
-        const targetTile: Tile = randomElement(shoreTiles);
         const sourceCenter: Tile = randomElement(shoreTiles);
-        if (distSq(targetTile, sourceCenter) <= radius * radius) continue;
+        const sourceTerritory: Tile[] = [];
+        let furthest: Tile;
+        let maxDist = -Infinity;
+        for (const s of shoreTiles) {
+            const dist = distSq(s, sourceCenter);
+            if (dist < radius * radius) {
+                sourceTerritory.push(s);
+                if (dist > maxDist) {
+                    maxDist = dist;
+                    furthest = s;
+                }
+            }
+        }
 
-        const sourceTerritory: Tile[] = shoreTiles.filter((t: Tile) => {
-            // if (Math.abs(t.y - sourceCenter.y) < 20) {
-            //     console.log("close");
-            // }
-            // const dist = distSq(t, sourceCenter);
-            // return dist <= SOURCE_RADIUS * SOURCE_RADIUS;
-            return distSq(t, sourceCenter) <= radius * radius;
-        });
         if (sourceTerritory.length === 0) continue;
-
         const territory: number[] = sourceTerritory.map(
             (s) => s.y * gameMap.width + s.x,
         );
+
+        const targetDistance = sampleDistribution();
+        let targetTile: Tile | null = null;
+        const max_tries = 50;
+        let tries = 0;
+        while (targetTile === null && tries < max_tries) {
+            tries++;
+            const candidates = shoreTiles.filter((t) => {
+                const d1 = distSq(t, furthest);
+                const d2 = distSq(t, sourceCenter);
+                const r2 = radius * radius;
+                const td2 = targetDistance * targetDistance;
+                const td12 = td2 * 1.2 * 1.2;
+
+                if (d2 < r2) return false;
+                if (d2 < r2 + 0.5 * td2) return false;
+                if (d1 >= td2 && d1 < td12) return true;
+            });
+            if (candidates.length > 0) targetTile = candidates[0];
+        }
+
+        if (targetTile === null) {
+            continue;
+        }
 
         const id = `${name}-${String(cases.length + 1).padStart(3, "0")}`;
         cases.push({
             id,
             target: targetTile,
             sourceCenter,
+            sourceFurthest: furthest!,
+            targetDistance,
+            centerFurthestDist: manhattanDist(sourceCenter, furthest!),
+            centerTargetDist: manhattanDist(sourceCenter, targetTile),
+            targetFurthestDist: manhattanDist(targetTile, furthest!),
             sourceRadius: radius,
             sourceShore: territory,
         });
     }
 
     return cases;
+}
+
+/**
+ * This function returns a random distance between 20 and 1000, with non-even weighting.
+ *
+ * The cumulative distribution function being sampled is described by: 1-exp(-x/150).
+ * By inverting this function, we can choose a random value between 0 and 1 and get a return value
+ * approximately between 0 and 1000. Adding 20 to the minium and then clamping the function to 1000
+ * ensures that we only get distances between 20 and 1000.
+ */
+export function sampleDistribution(): number {
+    return clamp(Math.round(-150 * Math.log(1 - Math.random()) + 20), 1000);
+}
+
+export function clamp(a: number, upper: number, lower: number = 0) {
+    return Math.max(Math.min(a, upper), lower);
 }
 
 /**

@@ -59,6 +59,11 @@ export interface TransportTestCase {
     id: string;
     target: Tile;
     sourceCenter: Tile;
+    sourceFurthest: Tile;
+    targetDistance: number;
+    centerFurthestDist: number;
+    centerTargetDist: number;
+    targetFurthestDist: number;
     sourceRadius: number;
     sourceShore: number[];
 }
