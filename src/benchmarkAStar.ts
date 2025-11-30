@@ -18,49 +18,43 @@ export function runAStarBenchmark(
     version: string,
 ) {
     for (let i = 0; i < tests.length; i++) {
-        if (i == 0) {
-            const playerShores: Tile[] = new Array(tests[i].sourceShore.length);
-            tests[i].sourceShore.forEach((s, index) => {
-                const y = Math.floor(s / map.width);
-                const x = s % map.width;
-                playerShores[index] = map.get(x, y);
-            });
-            const source = bestShoreDeploymentSource(
-                map,
-                miniMap,
-                playerShores,
-                tests[i].target,
+        const playerShores: Tile[] = new Array(tests[i].sourceShore.length);
+        tests[i].sourceShore.forEach((s, index) => {
+            const y = Math.floor(s / map.width);
+            const x = s % map.width;
+            playerShores[index] = map.get(x, y);
+        });
+        const source = bestShoreDeploymentSource(
+            map,
+            miniMap,
+            playerShores,
+            tests[i].target,
+        );
+        if (source) {
+            const result: TransportTestResult = {
+                id: tests[i].id,
+                version,
+                method: "BFS",
+                target: tests[i].target,
+                sourceCenter: tests[i].sourceCenter,
+                sourceRadius: tests[i].sourceRadius,
+                source: source.source,
+                visited: source.visited,
+            };
+
+            const __filename = fileURLToPath(import.meta.url);
+            const __dirname = path.dirname(__filename);
+            const dir = path.join(__dirname, "..", "results");
+            fs.mkdirSync(dir, { recursive: true });
+
+            const outPath = path.join(
+                dir,
+                `${tests[i].id}-Astar-TestResult.json`,
             );
-            if (source) {
-                const result: TransportTestResult = {
-                    id: tests[i].id,
-                    version,
-                    method: "BFS",
-                    target: tests[i].target,
-                    sourceCenter: tests[i].sourceCenter,
-                    sourceRadius: tests[i].sourceRadius,
-                    source: source.source,
-                    visited: source.visited,
-                };
-
-                const __filename = fileURLToPath(import.meta.url);
-                const __dirname = path.dirname(__filename);
-                const dir = path.join(__dirname, "..", "results");
-                fs.mkdirSync(dir, { recursive: true });
-
-                const outPath = path.join(
-                    dir,
-                    `${tests[i].id}-Astar-TestResult.json`,
-                );
-                fs.writeFileSync(
-                    outPath,
-                    JSON.stringify(result, null, 4),
-                    "utf8",
-                );
-                console.log(
-                    `Completed test ${i + 1} of ${tests.length} for map ${map.name} - A*`,
-                );
-            }
+            fs.writeFileSync(outPath, JSON.stringify(result, null, 4), "utf8");
+            console.log(
+                `Completed test ${i + 1} of ${tests.length} for map ${map.name} - A*`,
+            );
         }
     }
 }
