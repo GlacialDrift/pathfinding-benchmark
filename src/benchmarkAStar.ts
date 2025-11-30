@@ -34,7 +34,7 @@ export function runAStarBenchmark(
             const result: TransportTestResult = {
                 id: tests[i].id,
                 version,
-                method: "BFS",
+                method: "A*",
                 target: tests[i].target,
                 sourceCenter: tests[i].sourceCenter,
                 sourceRadius: tests[i].sourceRadius,
