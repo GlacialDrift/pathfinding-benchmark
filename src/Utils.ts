@@ -77,7 +77,7 @@ export interface TransportTestCase {
  *  - the source tile identified by the algorithm
  *  - the number of tiles visited during the algorithm
  */
-export interface TransportTestReseult {
+export interface TransportTestResult {
     id: string;
     version: string;
     method: string;

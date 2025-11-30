@@ -11,7 +11,8 @@
         "start": "ts-node src/main.ts",
         "lint": "eslint \"**/*.ts\"",
         "lint:fix": "eslint \"**/*.ts\" --fix",
-        "format": "prettier \"**/*.{ts,js,json,md}\" --write"
+        "format": "prettier \"**/*.{ts,js,json,md}\" --write",
+        "csv": "npx ts-node src/WriteResultsToCSV.ts ./results ./output.csv"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.3",

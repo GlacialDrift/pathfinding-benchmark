@@ -2,7 +2,7 @@ import {
     type GameMap,
     type Tile,
     type TransportTestCase,
-    type TransportTestReseult,
+    type TransportTestResult,
 } from "./Utils.ts";
 import * as fs from "node:fs";
 import { fileURLToPath } from "url";
@@ -17,7 +17,7 @@ export function runBFSBenchmark(
         if (j == 0) {
             const visited = benchmarkTest(map, tests[j]);
             if (!(visited instanceof Set)) {
-                const result: TransportTestReseult = {
+                const result: TransportTestResult = {
                     id: tests[j].id,
                     version,
                     method: "BFS",

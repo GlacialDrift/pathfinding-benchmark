@@ -3,7 +3,7 @@ import {
     manhattanDist,
     type Tile,
     type TransportTestCase,
-    type TransportTestReseult,
+    type TransportTestResult,
 } from "./Utils.ts";
 import { isShoreline, magnitude } from "./TerrainBytes.ts";
 import FastPriorityQueue from "fastpriorityqueue";
@@ -32,7 +32,7 @@ export function runAStarBenchmark(
                 tests[i].target,
             );
             if (source) {
-                const result: TransportTestReseult = {
+                const result: TransportTestResult = {
                     id: tests[i].id,
                     version,
                     method: "BFS",
