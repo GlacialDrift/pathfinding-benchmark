@@ -44,6 +44,7 @@ export interface GameMap {
 export interface Manifest {
     name: string;
     map: { width: number; height: number; num_land_tiles: number };
+    map4x: { width: number; height: number; num_land_tiles: number };
 }
 
 /**
@@ -154,6 +155,15 @@ export function distSq(a: Tile, b: Tile): number {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
     return dx * dx + dy * dy;
+}
+
+/**
+ * Helper function to determine the manhattan distance between two points
+ * @param a - the first point (includes x-y coordinates)
+ * @param b - the second point (includes x-y coordinates)
+ */
+export function manhattanDist(a: Tile, b: Tile): number {
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 
 /**
